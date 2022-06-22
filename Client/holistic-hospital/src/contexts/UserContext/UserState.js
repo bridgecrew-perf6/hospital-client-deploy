@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { UserContext, SetUserContext } from "./UserContext";
 
 const UserState = (props) => {
-    const initialState = {
+    const initialState = getUserStorage ?? {
         token: '',
         code: '',
         name: '',
