@@ -35,7 +35,7 @@ function App() {
         <Suspense fallback={<div></div>}>
           <Router>
             <Routes>
-              <Route index element={<Login />} />
+              <Route index path="" element={<Login />} />
               <Route exact path="recuperar" element={<RecoverPassword />} />
               <Route exact path="restablecer" element={<RestorePassword />} />
               
