@@ -12,9 +12,9 @@ import { Roles } from '../helpers/Roles';
 
 export default function Landing() {
     const navigate = useNavigate();
-    const { token, getUserStorage } = useContext(UserContext);
-    const { rol } = getUserStorage();
-    const isLogged = token !== '';
+    const userContext = useContext(UserContext);
+    const { rol } = userContext.getUserStorage();
+    const isLogged = userContext.token !== '';
 
     const usePathname = () => {
         const location = useLocation();
