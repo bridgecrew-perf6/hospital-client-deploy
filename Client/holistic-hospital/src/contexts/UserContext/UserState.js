@@ -14,7 +14,7 @@ const UserState = (props) => {
         isLogged: false,
     };
 
-    const initState = getUserStorage ?? initialState;
+    const initState = initialState ?? getUserStorage;
     const [userState, setUserState] = useState(initState);
     const [userCode, setUserCode] = useState("");
 
@@ -27,7 +27,7 @@ const UserState = (props) => {
     }
 
     function getUserStorage() {
-        return  JSON.parse( localStorage.getItem('userState') ) ?? initState;
+        return  initState ??  JSON.parse( localStorage.getItem('userState') );
     }
 
     const setUser = ( args ) => {
