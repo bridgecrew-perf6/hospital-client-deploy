@@ -9,7 +9,7 @@ import "primeicons/primeicons.css"; //icons
 
 //Components imports
 const Login = lazy(() => import("./pages/Login"));
-const RecoverPassword = lazy(() => import("./pages/RecoverPassword"));
+const RecoverPassword = lazy(() => import("./pages/RequestPassword"));
 const Welcome = lazy(() => import("./pages/Welcome"));
 const RestorePassword = lazy(() => import("./pages/RestorePassword"));
 const Landing = lazy(() => import("./pages/Landing"));

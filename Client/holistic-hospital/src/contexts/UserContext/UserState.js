@@ -12,10 +12,9 @@ const UserState = (props) => {
         rol: null,
         status: null,
         isLogged: false,
-    };
+    } ?? getUserStorage;
 
-    const initState = initialState ?? getUserStorage;
-    const [userState, setUserState] = useState(initState);
+    const [userState, setUserState] = useState(initialState);
     const [userCode, setUserCode] = useState("");
 
     useEffect(() => {
@@ -27,7 +26,7 @@ const UserState = (props) => {
     }
 
     function getUserStorage() {
-        return  initState ??  JSON.parse( localStorage.getItem('userState') );
+        return  initialState &&  JSON.parse( localStorage.getItem('userState') );
     }
 
     const setUser = ( args ) => {

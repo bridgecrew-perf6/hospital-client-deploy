@@ -86,7 +86,7 @@ export default function RestorePassword() {
                                 <h2 className="font-bold text-gray-100">
                                     <img src={logo} alt='logo' style={{ height: '10vmin' }} />
                                 </h2>
-                                <h2 className="mt-2 text-7xl font-bold text-gray-100">
+                                <h2 className="mt-2 text-6xl font-bold text-gray-100">
                                     Restablecer contraseña
                                 </h2>
                             </div>

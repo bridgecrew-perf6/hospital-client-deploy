@@ -78,7 +78,7 @@ export default function Login() {
     }
     return (
         <div>
-            <div className="relative min-h-screen  grid bg-black ">
+            <div className="relative min-h-screen grid bg-black w-full">
                 <Toast ref={toast} />
                 <div className="flex flex-col sm:flex-row items-center md:items-start sm:justify-center md:justify-start flex-auto min-w-0 ">
                     <LeftLoginSection />
@@ -126,14 +126,14 @@ export default function Login() {
                                     Iniciar sesión
                                 </button>
 
-                                <p className="bottom-0 text-white text-xs p-2 cursor-pointer" onClick={() => navigate("/recuperar")}>
-                                    ¿Olvidaste tu contraseña?, clic aquí.
+                                <p className="underline bottom-0 text-white text-xs p-2 cursor-pointer" onClick={() => navigate("/recuperar")}>
+                                    ¿Olvidaste tu contraseña?, haz clic aquí.
                                 </p>
                             </form>
                         </div>
                     </div>
                 </div>
             </div>
-        </div >
+        </div>
     );
 }
