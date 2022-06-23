@@ -27,7 +27,7 @@ const UserState = (props) => {
     }
 
     function getUserStorage() {
-        return  JSON.parse( localStorage.getItem('userState') ) ?? initialState;
+        return  JSON.parse( localStorage.getItem('userState') ) ?? initState;
     }
 
     const setUser = ( args ) => {
