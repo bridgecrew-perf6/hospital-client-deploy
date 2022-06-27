@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useContext } from 'react';
+import axios from 'axios';
 import MenuContext from '../../contexts/MenuContext/MenuContext';
 import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
@@ -16,55 +17,86 @@ import "../cssFiles/FormDemo.css";
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCircleUser } from '@fortawesome/free-solid-svg-icons';
 
-//Helpers imports
-import { People } from '../../helpers/UsersList';
-
 export default function EditOwnUser() {
     const { emergentEditOwnUserState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
     const userContext = useContext(UserContext);
-
-    const people = People;
+    const { role, token } = userContext.getUserStorage();
     const toast = useRef(null);
 
     const [display, setDisplay] = useState(false);
 
-    const [formData, setFormData] = useState({});
+    const [loading, setLoading] = useState(false);
     const [newPass, setNewPass] = useState(false);
+    let url = "";
 
+    const getUrl = (role) => {
+        switch (role) {
+            case 1:
+                return url = "admin/my-info/updatepassword";
+            case 2:
+                return url = "patient/my-info/updatepassword";
+            case 3:
+                return url = "secretary/my-info/updatepassword";
+            case 4:
+                return url = "doctor/my-info/updatepassword";
+            default:
+                return url = "";
+        }
+    }
     useEffect(() => {
         setDisplay(emergentEditOwnUserState);
     }, [emergentEditOwnUserState]);
 
     const defaultValues = {
-        actualpassword: '',
-        newpassword: '',
-        repeatpassword: ''
+        current_password: '',
+        new_password: '',
+        confirm_password: ''
     }
 
     const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
 
     const onSubmit = (data) => {
-        setFormData(data);
-        const foundPerson = people.find((person) => {
-            return person.code === userContext.code;
-        })
-        if (foundPerson.password !== undefined && foundPerson.password === data.actualpassword && data.newpassword === data.repeatpassword) {
-            reset();
-            toast.current.show({
-                severity: 'info',
-                summary: 'Confirmación',
-                detail: 'Contraseña actualizada con éxito.',
-                life: 3000,
-                style: { marginLeft: '20%' }
-            });
-            setTimeout(() => { onHide() }, 3000);
-        }
-        else {
+        try {
+            setLoading(true);
+            getUrl(role);
+            axios.put(process.env.REACT_APP_API_URL + url, data, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    setLoading(false);
+                    if (res.status === 200) {
+                        reset();
+                        toast.current.show({
+                            severity: 'info',
+                            summary: 'Confirmación',
+                            detail: res.data.message,
+                            life: 3000,
+                            style: { marginLeft: '20%' }
+                        });
+                        setTimeout(() => { onHide() }, 3000);
+                    } else {
+                        toast.current.show({
+                            severity: 'error',
+                            summary: 'Error',
+                            detail: res.data.message,
+                            life: 3000,
+                            style: { marginLeft: '20%' }
+                        });
+                    }
+                })
+                .catch(err => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: 'Contraseña actual incorrecta o las contraseñas nuevas no coinciden.',
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                })
+        } catch (error) {
             toast.current.show({
                 severity: 'error',
                 summary: 'Error',
-                detail: 'Contraseña actual incorrecta o las contraseñas nuevas no coinciden.',
+                detail: 'Algo salió mal',
                 life: 3000,
                 style: { marginLeft: '20%' }
             });
@@ -107,7 +139,7 @@ export default function EditOwnUser() {
                 breakpoints={{ '960px': '75vw', '640px': '100vw' }}
                 header="Editar perfil"
                 visible={display}
-                style={{ width: '50vw' }}
+                style={{ width: '70vw' }}
                 onHide={() => onHide('display')}
             >
                 <div className="form-demo w-full">
@@ -132,44 +164,49 @@ export default function EditOwnUser() {
                                 <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 p-fluid w-full">
                                     <div className="field">
                                         <span className="p-float-label">
-                                            <Controller name="actualpassword" control={control} rules={{ required: 'La contraseña actual es requerida.' }} render={({ field, fieldState }) => (
+                                            <Controller name="current_password" control={control} rules={{ required: 'La contraseña actual es requerida.' }} render={({ field, fieldState }) => (
                                                 <Password id={field.name} {...field} toggleMask className={classNames({ 'p-invalid': fieldState.invalid })} />
                                             )} />
-                                            <label htmlFor="actualpassword" className={classNames({ 'p-error': errors.password })}>Contraseña actual*</label>
+                                            <label htmlFor="current_password" className={classNames({ 'p-error': errors.current_password })}>Contraseña actual*</label>
                                         </span>
-                                        {getFormErrorMessage('actualpassword')}
+                                        {getFormErrorMessage('current_password')}
                                     </div>
 
                                     <div className="field">
                                         <span className="p-float-label">
-                                            <Controller name="newpassword" control={control} rules={{ required: 'La contraseña es requerida.' }} render={({ field, fieldState }) => (
+                                            <Controller name="new_password" control={control} rules={{ required: 'La contraseña es requerida.' }} render={({ field, fieldState }) => (
                                                 <Password autoComplete='off' id={field.name} {...field} toggleMask className={classNames({ 'p-invalid': fieldState.invalid })} header={passwordHeader} footer={passwordFooter} />
                                             )} />
-                                            <label htmlFor="newpassword" className={classNames({ 'p-error': errors.password })}>Nueva contraseña*</label>
+                                            <label htmlFor="new_password" className={classNames({ 'p-error': errors.new_password })}>Nueva contraseña*</label>
                                         </span>
-                                        {getFormErrorMessage('newpassword')}
+                                        {getFormErrorMessage('new_password')}
                                     </div>
 
                                     <br />
 
                                     <div className="field m-3">
                                         <span className="p-float-label">
-                                            <Controller name="repeatpassword" control={control} rules={{ required: 'La nueva contraseña es requerida.' }} render={({ field, fieldState }) => (
+                                            <Controller name="confirm_password" control={control} rules={{ required: 'La nueva contraseña es requerida.' }} render={({ field, fieldState }) => (
                                                 <Password autoComplete='off' id={field.name} {...field} toggleMask className={classNames({ 'p-invalid': fieldState.invalid })} />
                                             )} />
-                                            <label htmlFor="repeatpassword" className={classNames({ 'p-error': errors.password })}>Repetir contraseña*</label>
+                                            <label htmlFor="confirm_password" className={classNames({ 'p-error': errors.confirm_password })}>Repetir contraseña*</label>
                                         </span>
-                                        {getFormErrorMessage('repeatpassword')}
+                                        {getFormErrorMessage('confirm_password')}
                                     </div>
 
                                     <div className='col-span-2 flex justify-center mt-5'>
-                                        <button
-                                            type="submit"
-                                            className="w-1/2 flex justify-center text-white p-2 rounded-full tracking-wide font-bold focus:outline-none focus:shadow-outline hover:bg-indigo-600 shadow-lg bg-blue-800 cursor-pointer transition ease-in duration-300"
+                                        {
+                                            loading && loading === true ?
+                                                <i className="pi pi-spinner text-white animate-spin"></i>
+                                                :
+                                                <button
+                                                    type="submit"
+                                                    className="w-1/2 flex justify-center text-white p-2 rounded-full tracking-wide font-bold focus:outline-none focus:shadow-outline hover:bg-indigo-600 shadow-lg bg-blue-800 cursor-pointer transition ease-in duration-300"
 
-                                        >
-                                            Actualizar
-                                        </button>
+                                                >
+                                                    Actualizar
+                                                </button>
+                                        }
                                     </div>
                                 </form>
                                 :

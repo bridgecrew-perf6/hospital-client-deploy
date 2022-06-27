@@ -18,14 +18,14 @@ const EditOwnUser = lazy(() => import('./EmergentWindows/EditOwnUser'));
 export default function SideBar() {
     const navigate = useNavigate();
     const [active, setActive] = useState(false);
-    const { name, last_name, getUserStorage } = useContext(UserContext);
+    const { name, username, last_name, getUserStorage } = useContext(UserContext);
     const setUser = useContext(SetUserContext);
-    const { rol } = getUserStorage();
+    const { role } = getUserStorage();
     const menuContext = useContext(MenuContext);
     const routes = convertRoutes(navigate);
 
     const castRol = Roles.find((r) => {
-        return r.code === rol;
+        return r.code === role;
     });
 
     const modulatedRoutes = routes.filter(({ roles, label }) => {
@@ -46,7 +46,10 @@ export default function SideBar() {
                 <Sidebar visible={active} onHide={() => setActive(false)} style={{ color: 'white', backgroundColor: 'black' }}>
                     <div className="w-full flex flex-row items-center">
                         <img src={logo} alt='logo' className='mr-2' style={{ height: '10vmin' }} />
-                        <h1 className="text-bold text-center w-full"><b> {name + ' ' + last_name} </b></h1>
+                        <div className="w-full flex-colitems-center">
+                            <h1 className="text-bold text-center w-full"><b> {name + ' ' + last_name} </b></h1>
+                            <h1 className="text-center w-full">{"@" + username}</h1>
+                        </div>
                     </div>
                     <div className='flex justify-around align-middle m-4'>
                         <h1
@@ -63,11 +66,12 @@ export default function SideBar() {
                             onClick={() => {
                                 setUser({
                                     token: '',
-                                    code: '',
+                                    id_person: '',
                                     name: '',
+                                    username: '',
                                     last_name: '',
                                     email: '',
-                                    rol: null,
+                                    role: null,
                                     status: null,
                                     isLogged: false,
                                 })

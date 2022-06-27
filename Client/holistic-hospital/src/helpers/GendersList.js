@@ -1,4 +1,4 @@
 export const GendersList = [
-    { name: "Femenino", code: 1 },
-    { name: "Masculino", code: 2 }
+    { name: "Femenino", code: 'F' },
+    { name: "Masculino", code: 'M' }
 ]

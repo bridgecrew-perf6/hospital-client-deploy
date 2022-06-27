@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
+import axios from 'axios';
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -15,30 +17,41 @@ import "../cssFiles/FormDemo.css";
 import { Genders } from '../../helpers/Genders';
 
 
-export default function EditExamExistence({code}) {
+export default function EditExamExistence({id,name}) {
     
     const { emergentEditExamState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
-
+    const { token } = useContext(UserContext);
     const genders = Genders;
     const toast = useRef(null);
 
-    
     const [display, setDisplay] = useState(false);
     const [showMessage, setShowMessage] = useState(false);
-    const [formData, setFormData] = useState({});
 
-    const defaultValues = {
-    name: '',
-    gender: '',
-    start_age: null,
-    frequency: null,
-    }
-
-    const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
+    const { control, formState: { errors }, handleSubmit, reset } = useForm();
 
     const onSubmit = (data) => {
-        setFormData(data);
+        try {
+            data = {
+                id: id,
+                gender: data.gender,
+                start_age: data.start_age,
+                frequency: data.frequency
+            }
+            axios.put(process.env.REACT_APP_API_URL + 'admin/tests/update', data, { headers: { Authorization: `Bearer ${token}` } } )
+                .then((res) => {
+                    if (res.status === 200) {
+                        reset();
+                        setShowMessage(true);
+                    }
+                })
+                .catch((err) => {
+                    console.error(err);
+                });
+        } catch (error) {
+            throw console.error(error);
+        }
+        
         setShowMessage(true);
 
         reset();
@@ -98,7 +111,7 @@ export default function EditExamExistence({code}) {
                         <div className="flex justify-content-center flex-column pt-6 px-3">
                             <i className="pi pi-check-circle" style={{ fontSize: '5rem', color: 'var(--green-500)' }}></i>
                             <p style={{ lineHeight: 1.5, textIndent: '1rem' }}>
-                                <b>{code}</b> editado con éxito.
+                                <b>{name}</b> editado con éxito.
                             </p>
                         </div>
                     </Dialog>
@@ -115,14 +128,14 @@ export default function EditExamExistence({code}) {
                                         <Controller name="name" control={control} render={({ field, fieldState }) => (
                                             <InputText id={field.name} {...field} autoFocus  />
                                         )} />
-                                        <label htmlFor="name" className={classNames({ 'p-error': errors.name })}>Nombre*</label>
+                                        <label htmlFor="name" className={classNames({ 'p-error': errors.name })}>Nombre</label>
                                     </span>
                                 </div>
 
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="gender" control={control} rules={{ required: 'El género es requerido.' }} render={({ field }) => (
+                                        <Controller name="gender" control={control} render={({ field }) => (
                                             <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={genders} optionLabel='name' />
                                         )} />
                                         <label htmlFor="gender" className={classNames({ 'p-error': errors.gender })}>Género</label>

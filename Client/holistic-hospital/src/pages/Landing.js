@@ -13,7 +13,7 @@ import { Roles } from '../helpers/Roles';
 export default function Landing() {
     const navigate = useNavigate();
     const { token, getUserStorage} = useContext(UserContext);
-    const { rol } = getUserStorage();
+    const { role } = getUserStorage();
     const isLogged = token !== '';
 
     const usePathname = () => {
@@ -27,7 +27,7 @@ export default function Landing() {
 
     useEffect(() => {
         const castRol = Roles.find((r) => {
-            return r.code === rol;
+            return r.code === role;
         });
         if (isLogged === false) navigate("/")
         else {
@@ -50,7 +50,7 @@ export default function Landing() {
                     items.forEach(({ pathi, rolesi }) => {
                         let match = pathi === pathname ? true : false;
                         if (match === true) {
-                            const authorized = rolesi.some((rol) => rol === castRol.name);
+                            const authorized = rolesi.some((role) => role === castRol.name);
                             if (authorized === false)
                                 navigate("/landing");
                         }
@@ -58,14 +58,14 @@ export default function Landing() {
                 } else {
                     let match = path === pathname ? true : false;
                     if (match === true) {
-                        const authorized = roles.some((rol) => rol === castRol.name);
+                        const authorized = roles.some((role) => role === castRol.name);
                         if (authorized === false)
                             navigate("/landing");
                     }
                 }
             })
         }
-    }, [isLogged, navigate, pathname, rol, routes]);
+    }, [isLogged, navigate, pathname, role, routes]);
 
     return (
         <div className="w-full h-screen">

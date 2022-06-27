@@ -3,16 +3,18 @@ import React, { useEffect, useState } from "react";
 import { UserContext, SetUserContext } from "./UserContext";
 
 const UserState = (props) => {
-    const initialState = {
+    const initialState =  getUserStorage ?? {
         token: '',
-        code: '',
+        id_person: null,
         name: '',
+        username: '',
         last_name: '',
         email: '',
-        rol: null,
+        role: null,
+        area: null,
         status: null,
         isLogged: false,
-    } ?? getUserStorage;
+    };
 
     const [userState, setUserState] = useState(initialState);
     const [userCode, setUserCode] = useState("");
@@ -26,7 +28,7 @@ const UserState = (props) => {
     }
 
     function getUserStorage() {
-        return  initialState &&  JSON.parse( localStorage.getItem('userState') );
+        return JSON.parse( localStorage.getItem('userState') ) ?? initialState;
     }
 
     const setUser = ( args ) => {
@@ -45,11 +47,13 @@ const UserState = (props) => {
         <UserContext.Provider
             value={{
                 token: userState.token,
-                code: userState.code,
+                id_person: userState.id_person,
                 name: userState.name,
+                username: userState.username,
                 last_name: userState.last_name,
                 email: userState.email,
-                rol: userState.rol,
+                role: userState.role,
+                area: userState.area,
                 status: userState.status,
                 isLogged: userState.isLogged,
                 userCode,

@@ -13,11 +13,11 @@ export function convertRoutes(navigator) {
         {
             label: 'Expediente',
             path: '/landing/expediente',
-            roles: [UserRoles.USUARIO],
+            roles: [UserRoles.PACIENTE],
             items: [
                 {
                     label: 'Inmunizaciones',
-                    rolesi: [UserRoles.USUARIO],
+                    rolesi: [UserRoles.PACIENTE],
                     command: (event) => {
                         navigator('/landing/expediente/inmunizaciones');
                     },
@@ -25,7 +25,7 @@ export function convertRoutes(navigator) {
                 },
                 {
                     label: 'Exámenes realizados',
-                    rolesi: [UserRoles.USUARIO],
+                    rolesi: [UserRoles.PACIENTE],
                     command: (event) => {
                         navigator('/landing/expediente/examenes-realizados');
                     },
@@ -33,7 +33,7 @@ export function convertRoutes(navigator) {
                 },
                 {
                     label: 'Recetas médicas',
-                    rolesi: [UserRoles.USUARIO],
+                    rolesi: [UserRoles.PACIENTE],
                     command: (event) => {
                         navigator('/landing/expediente/recetas-medicas');
                     },
@@ -41,7 +41,7 @@ export function convertRoutes(navigator) {
                 },
                 {
                     label: 'Citas previas',
-                    rolesi: [UserRoles.USUARIO],
+                    rolesi: [UserRoles.PACIENTE],
                     command: (event) => {
                         navigator('/landing/expediente/citas-previas');
                     },
@@ -51,7 +51,7 @@ export function convertRoutes(navigator) {
         },
         {
             label: 'Agendar cita',
-            roles: [UserRoles.USUARIO,UserRoles.SECRETARIA],
+            roles: [UserRoles.PACIENTE,UserRoles.SECRETARIA],
             command: (event) => {
                 navigator('/landing/citas');
             },
@@ -77,7 +77,7 @@ export function convertRoutes(navigator) {
         },
         {
             label: 'Recordatorios',
-            roles: [UserRoles.USUARIO],
+            roles: [UserRoles.PACIENTE],
             command: (event) => {
                 navigator('/landing/recordatorios');
             },

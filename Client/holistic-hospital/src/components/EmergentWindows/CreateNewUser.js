@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -16,41 +17,94 @@ import { classNames } from 'primereact/utils';
 import "../cssFiles/FormDemo.css";
 import { GendersList } from '../../helpers/GendersList';
 import { Roles } from '../../helpers/Roles';
-import { AreasList } from '../../helpers/AreasList';
+import axios from 'axios';
 
 export default function CreateNewUser() {
     const { emergentNewUserState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
+    const { token } = useContext(UserContext);
 
     const gendersList =  GendersList;
     const roles = Roles;
-    const areasList = AreasList;
     const toast = useRef(null);
     
     var today = new Date();
     const [display, setDisplay] = useState(false);
+    const [areasList, setAreasList] = useState([]);
     const [showMessage, setShowMessage] = useState(false);
     const [formData, setFormData] = useState({});
-
+    
     const defaultValues = {
         name: '',
-        lastname: '',
-        gender: null,
+        username: '',
+        last_name: '',
         email: '',
         password: '',
         role: null,
+        gender: null,
         birthdate: null,
         area: null,
     }
 
     const { control, formState: { errors }, handleSubmit, reset, watch } = useForm({ defaultValues });
+    const birthdate = watch('birthdate',false);
     const selectedRole = watch('role',false);
 
+    useEffect(() => {
+        try {
+            axios.get(process.env.REACT_APP_API_URL + "admin/areas", { headers: { Authorization: `Bearer ${token}` } } )
+            .then(res => {
+              if(res.status === 200){
+                setAreasList(res.data);
+              }
+            }).catch(err => console.error(err));
+          } catch (error) {
+            throw console.error(error);
+          }
+    },[])
+    
     const onSubmit = (data) => {
         setFormData(data);
-        setShowMessage(true);
+        var dd = birthdate.getDate();
+        var mm = birthdate.getMonth() + 1;
+        var yyyy = birthdate.getFullYear();
 
-        reset();
+        if (dd < 10) {
+            dd = "0" + dd;
+        }
+
+        if (mm < 10) {
+            mm = "0" + mm;
+        }
+
+        today = yyyy + "-" + mm + "-" + dd;
+        data.birthdate = today;
+        try {
+            axios.post(process.env.REACT_APP_API_URL + "admin/users/create", data, { headers: { Authorization: `Bearer ${token}` } })
+            .then(res => {
+                if(res.status === 201){
+                    setShowMessage(true);
+                    reset();
+                }
+            })
+            .catch(err => {
+                toast.current.show({
+                    severity: 'error',
+                    summary: 'Error',
+                    detail: 'Algo salió mal',
+                    life: 3000,
+                    style: { marginLeft: '20%' }
+                });
+            })
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
     };
 
     const getFormErrorMessage = (name) => {
@@ -123,7 +177,7 @@ export default function CreateNewUser() {
                         <div className="flex justify-content-center flex-column pt-6 px-3">
                             <i className="pi pi-check-circle" style={{ fontSize: '5rem', color: 'var(--green-500)' }}></i>
                             <p style={{ lineHeight: 1.5, textIndent: '1rem' }}>
-                                <b>{formData.name}</b> registrado con éxito.
+                                <b>{formData.name + ' ' + formData.last_name + ' @' + formData.username}</b> registrado con éxito.
                             </p>
                         </div>
                     </Dialog>
@@ -143,20 +197,30 @@ export default function CreateNewUser() {
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="lastname" control={control} rules={{ required: 'El apellido es requerido' }} render={({ field, fieldState }) => (
+                                        <Controller name="username" control={control} rules={{ required: 'El nombre de usuario es requerido' }} render={({ field, fieldState }) => (
                                             <InputText id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })} />
                                         )} />
-                                        <label htmlFor="lastname" className={classNames({ 'p-error': errors.name })}>Apellido*</label>
+                                        <label htmlFor="name" className={classNames({ 'p-error': errors.username })}>Nombre de usuario*</label>
                                     </span>
-                                    {getFormErrorMessage('lastname')}
+                                    {getFormErrorMessage('username')}
+                                </div>
+
+                                <div className="field">
+                                    <span className="p-float-label">
+                                        <Controller name="last_name" control={control} rules={{ required: 'El apellido es requerido' }} render={({ field, fieldState }) => (
+                                            <InputText id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })} />
+                                        )} />
+                                        <label htmlFor="last_name" className={classNames({ 'p-error': errors.last_name })}>Apellido*</label>
+                                    </span>
+                                    {getFormErrorMessage('last_name')}
                                 </div>
 
                                 <div className="field">
                                     <span className="p-float-label">
                                         <Controller name="gender" control={control} rules={{ required: 'El género es requerido.' }} render={({ field }) => (
-                                            <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={gendersList} optionLabel='name' />
+                                            <Dropdown optionValue='code' id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={gendersList} optionLabel='name' />
                                         )} />
-                                        <label htmlFor="gender" className={classNames({ 'p-error': errors.role })}>Género*</label>
+                                        <label htmlFor="gender" className={classNames({ 'p-error': errors.gender })}>Género*</label>
                                     </span>
                                     {getFormErrorMessage('gender')}
                                 </div>
@@ -187,7 +251,7 @@ export default function CreateNewUser() {
                                 <div className="field">
                                     <span className="p-float-label">
                                         <Controller name="role" control={control} rules={{ required: 'El rol es requerido.' }} render={({ field }) => (
-                                            <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={roles} optionLabel='name' />
+                                            <Dropdown optionValue='code' id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={roles} optionLabel='name' />
                                         )} />
                                         <label htmlFor="role" className={classNames({ 'p-error': errors.role })}>Rol</label>
                                     </span>
@@ -195,13 +259,13 @@ export default function CreateNewUser() {
                                 </div>
 
                                 {
-                                        selectedRole && (selectedRole['code'] === 4 || selectedRole['code'] === 3) ?
+                                        selectedRole && (selectedRole === 4 || selectedRole === 3) ?
                                         <div className="field">
                                             <span className="p-float-label">
                                                 <Controller name="area" control={control} rules={{ required: 'El área es requerida.' }} render={({ field }) => (
-                                                    <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={areasList} optionLabel='name' />
+                                                    <Dropdown options={areasList} optionLabel='name' optionValue='id_area' id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} />
                                                 )} />
-                                                <label htmlFor="area" className={classNames({ 'p-error': errors.role })}>Área*</label>
+                                                <label htmlFor="area" className={classNames({ 'p-error': errors.area })}>Área*</label>
                                             </span>
                                             {getFormErrorMessage('area')}
                                         </div> 

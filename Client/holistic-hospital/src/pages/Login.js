@@ -1,40 +1,79 @@
-import React, { useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
+import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { UserContext, SetUserContext } from '../contexts/UserContext/UserContext';
 
 //Components imports
 import { Controller } from 'react-hook-form';
-import { InputNumber } from 'primereact/inputnumber';
+import { InputText } from 'primereact/inputtext';
 import { classNames } from 'primereact/utils';
 import { Password } from 'primereact/password';
 import { Toast } from 'primereact/toast';
 
 //Helpers imports
 import logo from '../logo.png';
-import { People } from '../helpers/UsersList'
 import LeftLoginSection from '../components/LeftLoginSection';
 import { useForm } from 'react-hook-form';
 
 export default function Login() {
-    const { token } = useContext(UserContext);
+    const { token, status } = useContext(UserContext);
     const setUser = useContext(SetUserContext);
     const navigate = useNavigate();
     const toast = useRef(null);
 
-    const people = People;
     const isLogged = token !== '';
 
+    const [loading, setLoading] = useState(false);
+
     const defaultValues = {
-        code: null,
-        password: '',
+        username: "",
+        password: "",
     }
 
     const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
 
     const onSubmit = (data) => {
-        login(data);
+        setLoading(true);
+        try {
+            axios.post(process.env.REACT_APP_API_URL + "auth/signin", data)
+                .then((res) => {
+                    if (res.status === 200) {
+                        setLoading(false);
+                        reset();
+                        setUser({
+                            token: res.data.token,
+                            id_person: res.data.id_person,
+                            name: res.data.name,
+                            username: res.data.username,
+                            last_name: res.data.last_name,
+                            email: res.data.email,
+                            role: res.data.role.id_role,
+                            status: res.data.status,
+                            isLogged: true,
+                        })
+                        navigate('/landing');
+                    }
+                })
+                .catch(err => {
+                    setLoading(false);
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error al iniciar sesión',
+                        detail: 'Verifique los datos ingresados',
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                });
 
-        reset();
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error al iniciar sesión',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
     };
 
     const getFormErrorMessage = (name) => {
@@ -42,40 +81,9 @@ export default function Login() {
     };
 
     useEffect(() => {
-        if (isLogged) navigate("/landing");
-    }, [isLogged, navigate]);
+        if (isLogged && status === true) navigate("/landing");
+    }, [isLogged, status, navigate]);
 
-    const login = ({ code, password }) => {
-        try {
-            const foundPerson = people.find((person) => {
-                return person.code === code && person.password === password;
-            })
-            if (foundPerson !== undefined && foundPerson.status === true) {
-                setUser({
-                    token: foundPerson.token,
-                    code: foundPerson.code,
-                    name: foundPerson.name,
-                    last_name: foundPerson.last_name,
-                    email: foundPerson.email,
-                    rol: foundPerson.rol,
-                    status: foundPerson.status,
-                    isLogged: true,
-                })
-                navigate('/landing');
-            }
-            else
-                toast.current.show({
-                    severity: 'error',
-                    summary: 'Error al iniciar sesión',
-                    detail: 'Verifique los datos ingresados',
-                    life: 3000,
-                    style: { marginLeft: '20%' }
-                });
-
-        } catch (error) {
-            console.log(error);
-        }
-    }
     return (
         <div>
             <div className="relative min-h-screen grid bg-black w-full">
@@ -99,12 +107,12 @@ export default function Login() {
                             <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col block justify-center items-center w-full h-3/4 rounded-md shadow-md">
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="code" control={control} rules={{ required: 'El código es requerido.' }} render={({ field, fieldState }) => (
-                                            <InputNumber autoComplete="off" id={field.name} {...field} autoFocus className={classNames({ 'p-invalid': fieldState.invalid })} mode='decimal' onChange={(e) => field.onChange(e.value)} />
+                                        <Controller name="username" control={control} rules={{ required: 'El nombre de usuario es requerido.' }} render={({ field, fieldState }) => (
+                                            <InputText autoComplete="off" id={field.name} {...field} autoFocus className={classNames({ 'p-invalid': fieldState.invalid })} onChange={(e) => field.onChange(e.target.value)} />
                                         )} />
-                                        <label htmlFor="code" className={classNames({ 'p-error': errors.name })}>Código*</label>
+                                        <label htmlFor="username" className={classNames({ 'p-error': errors.username })}>Nombre de usuario*</label>
                                     </span>
-                                    {getFormErrorMessage('code')}
+                                    {getFormErrorMessage('username')}
                                 </div>
 
                                 <div className="field mt-8">
@@ -119,12 +127,17 @@ export default function Login() {
 
                                 <br />
 
-                                <button
-                                    type="submit"
-                                    className="lg:w-1/2 w-full flex justify-center text-white p-2 rounded-full tracking-wide font-bold focus:outline-none focus:shadow-outline hover:bg-indigo-600 shadow-lg bg-blue-800 cursor-pointer transition ease-in duration-300"
-                                >
-                                    Iniciar sesión
-                                </button>
+                                {
+                                    loading === true ?
+                                        <i className="pi pi-spinner text-white animate-spin"></i>
+                                        :
+                                        <button
+                                            type="submit"
+                                            className="lg:w-1/2 w-full flex justify-center text-white p-2 rounded-full tracking-wide font-bold focus:outline-none focus:shadow-outline hover:bg-indigo-600 shadow-lg bg-blue-800 cursor-pointer transition ease-in duration-300"
+                                        >
+                                            Iniciar sesión
+                                        </button>
+                                }
 
                                 <p className="underline bottom-0 text-white text-xs p-2 cursor-pointer" onClick={() => navigate("/recuperar")}>
                                     ¿Olvidaste tu contraseña?, haz clic aquí.

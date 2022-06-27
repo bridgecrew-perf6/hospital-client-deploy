@@ -1,11 +1,12 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import axios from "axios";
 import MenuContext from "../contexts/MenuContext/MenuContext";
+import { UserContext } from "../contexts/UserContext/UserContext";
 
 //Components imports
 import { DataTable } from "primereact/datatable";
 import { Column } from 'primereact/column';
 import { Toolbar } from 'primereact/toolbar';
-import { InputText } from "primereact/inputtext";
 import { Button } from "primereact/button";
 import './cssFiles/DataTable.css';
 
@@ -14,17 +15,30 @@ import DeleteOneExam from "./EmergentWindows/DeleteExamExistence";
 
 import CreateNewExam from "./EmergentWindows/CreateNewExam";
 
-//Helpers imports
-import { Exams } from "../helpers/ExamExistenceList";
-
 export default function ExamExistenceTable() {
   const menuContext = useContext(MenuContext);
-  const exams = Exams;
+  const { token } = useContext(UserContext);
   const [codevar, setcodevar] = useState("");
   const [namevar, setnamevar] = useState("");
 
-  const [globalFilter, setGlobalFilter] = useState(null);
   const dt = useRef(null);
+
+  const [loading, setLoading] = useState(false);
+  const [testsList, setTestsList] = useState([]);
+
+  useEffect(() => {
+    try {
+      axios.get(process.env.REACT_APP_API_URL + "admin/tests", { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          if (res.status === 200) {
+            setTestsList(res.data);
+            setLoading(false);
+          }
+        }).catch(err => console.error(err));
+    } catch (error) {
+      throw console.error(error);
+    }
+  })
 
   const leftToolbarTemplate = () => {
     return (
@@ -49,7 +63,8 @@ export default function ExamExistenceTable() {
           tooltipOptions={{ position: 'bottom' }}
           className="p-button-rounded p-button-success mr-2"
           onClick={() => {
-            setcodevar(rowData.code);
+            setcodevar(rowData.id_test);
+            setnamevar(rowData.name);
             menuContext.settingEmergentEditExamState();
           }}
         />
@@ -60,7 +75,7 @@ export default function ExamExistenceTable() {
           className="p-button-rounded p-button-warning"
           onClick={() => {
             setnamevar(rowData.name);
-            setcodevar(rowData.code);
+            setcodevar(rowData.id_test);
             menuContext.settingEmergentDeleteOneExamState();
           }}
         />
@@ -71,10 +86,6 @@ export default function ExamExistenceTable() {
   const header = (
     <div className="table-header">
       <h5 className="mx-0 my-1">Manejo de examenes</h5>
-      <span className="p-input-icon-left">
-        <i className="pi pi-search" />
-        <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Buscar..." />
-      </span>
     </div>
   );
 
@@ -97,26 +108,26 @@ export default function ExamExistenceTable() {
       {/*
           *User edit emergent window 
         */}
-      <EditExamExistence code={codevar} />
+      <EditExamExistence id={codevar} name={namevar} />
 
       {/*
           *User deletion emergent window 
         */}
-      <DeleteOneExam code={codevar} name={namevar} />
+      <DeleteOneExam id={codevar} name={namevar} />
 
       <div className="card">
 
         <Toolbar className="mb-4" left={leftToolbarTemplate} ></Toolbar>
 
-        <DataTable showGridlines lazy={true} ref={dt} value={exams}
+        <DataTable loading={loading} showGridlines ref={dt} value={testsList}
           dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} exams"
-          globalFilter={globalFilter} header={header} responsiveLayout="scroll">
-          <Column field="name" header="Nombre" sortable style={{ minWidth: '12rem' }}></Column>
-          <Column field="gender" header="Género" body={genderBodyTemplate} sortable style={{ minWidth: '12rem' }}></Column>
-          <Column field="start_age" header="Edad inicial" sortable style={{ minWidth: '12rem' }}></Column>
-          <Column field="frequency" header="Frecuencia (días)" sortable style={{ minWidth: '8rem' }}></Column>
+          currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} exámenes"
+          header={header} responsiveLayout="scroll">
+          <Column field="name" header="Nombre" style={{ minWidth: '12rem' }}></Column>
+          <Column field="gender" header="Género" body={genderBodyTemplate} style={{ minWidth: '12rem' }}></Column>
+          <Column field="start_age" header="Edad inicial" style={{ minWidth: '12rem' }}></Column>
+          <Column field="frequency" header="Frecuencia (días)" style={{ minWidth: '8rem' }}></Column>
           <Column body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></Column>
         </DataTable>
       </div>

@@ -37,7 +37,7 @@ function App() {
             <Routes>
               <Route index path="" element={<Login />} />
               <Route exact path="recuperar" element={<RecoverPassword />} />
-              <Route exact path="restablecer" element={<RestorePassword />} />
+              <Route exact path="restablecer/:p" element={<RestorePassword />} />
               
               <Route path="landing" element={<Landing />}>
                 <Route index element={<Welcome />} />
