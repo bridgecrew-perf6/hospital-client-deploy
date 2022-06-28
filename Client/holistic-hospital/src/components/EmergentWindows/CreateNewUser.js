@@ -24,16 +24,16 @@ export default function CreateNewUser() {
     const menuContext = useContext(MenuContext);
     const { token } = useContext(UserContext);
 
-    const gendersList =  GendersList;
+    const gendersList = GendersList;
     const roles = Roles;
     const toast = useRef(null);
-    
+
     var today = new Date();
     const [display, setDisplay] = useState(false);
     const [areasList, setAreasList] = useState([]);
     const [showMessage, setShowMessage] = useState(false);
     const [formData, setFormData] = useState({});
-    
+
     const defaultValues = {
         name: '',
         username: '',
@@ -47,22 +47,36 @@ export default function CreateNewUser() {
     }
 
     const { control, formState: { errors }, handleSubmit, reset, watch } = useForm({ defaultValues });
-    const birthdate = watch('birthdate',false);
-    const selectedRole = watch('role',false);
+    const birthdate = watch('birthdate', false);
+    const selectedRole = watch('role', false);
 
     useEffect(() => {
         try {
-            axios.get(process.env.REACT_APP_API_URL + "admin/areas", { headers: { Authorization: `Bearer ${token}` } } )
-            .then(res => {
-              if(res.status === 200){
-                setAreasList(res.data);
-              }
-            }).catch(err => console.error(err));
-          } catch (error) {
-            throw console.error(error);
-          }
-    },[])
-    
+            axios.get(process.env.REACT_APP_API_URL + "admin/areas", { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    if (res.status === 200) {
+                        setAreasList(res.data);
+                    }
+                }).catch(err => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: err.response.data.message,
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                });
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
+    })
+
     const onSubmit = (data) => {
         setFormData(data);
         var dd = birthdate.getDate();
@@ -81,21 +95,21 @@ export default function CreateNewUser() {
         data.birthdate = today;
         try {
             axios.post(process.env.REACT_APP_API_URL + "admin/users/create", data, { headers: { Authorization: `Bearer ${token}` } })
-            .then(res => {
-                if(res.status === 201){
-                    setShowMessage(true);
-                    reset();
-                }
-            })
-            .catch(err => {
-                toast.current.show({
-                    severity: 'error',
-                    summary: 'Error',
-                    detail: 'Algo salió mal',
-                    life: 3000,
-                    style: { marginLeft: '20%' }
-                });
-            })
+                .then(res => {
+                    if (res.status === 201) {
+                        setShowMessage(true);
+                        reset();
+                    }
+                })
+                .catch(err => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: err.response.data.message,
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                })
         } catch (error) {
             toast.current.show({
                 severity: 'error',
@@ -259,7 +273,7 @@ export default function CreateNewUser() {
                                 </div>
 
                                 {
-                                        selectedRole && (selectedRole === 4 || selectedRole === 3) ?
+                                    selectedRole && (selectedRole === 4 || selectedRole === 3) ?
                                         <div className="field">
                                             <span className="p-float-label">
                                                 <Controller name="area" control={control} rules={{ required: 'El área es requerida.' }} render={({ field }) => (
@@ -268,10 +282,10 @@ export default function CreateNewUser() {
                                                 <label htmlFor="area" className={classNames({ 'p-error': errors.area })}>Área*</label>
                                             </span>
                                             {getFormErrorMessage('area')}
-                                        </div> 
+                                        </div>
                                         :
                                         ""
-                                    }
+                                }
 
                                 <div className="field">
                                     <span className="p-float-label">

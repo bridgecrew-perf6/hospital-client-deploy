@@ -14,15 +14,14 @@ import { classNames } from 'primereact/utils';
 import { InputNumber } from 'primereact/inputnumber';
 
 import "../cssFiles/FormDemo.css";
-import { Genders } from '../../helpers/Genders';
-
+import { GendersList } from '../../helpers/GendersList';
 
 export default function CreateNewExam() {
     const { emergentNewExamState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
     const { token } = useContext(UserContext);
 
-    const genders = Genders;
+    const gendersList = GendersList;
     const toast = useRef(null);
     const [display, setDisplay] = useState(false);
     const [showMessage, setShowMessage] = useState(false);
@@ -51,7 +50,7 @@ export default function CreateNewExam() {
                     toast.current.show({
                         severity: 'error',
                         summary: 'Error',
-                        detail: 'Algo salió mal',
+                        detail: err.response.data.message,
                         life: 3000,
                         style: { marginLeft: '20%' }
                     });
@@ -147,7 +146,7 @@ export default function CreateNewExam() {
                                 <div className="field">
                                     <span className="p-float-label">
                                         <Controller name="gender" control={control} render={({ field }) => (
-                                            <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={genders} optionLabel='name' />
+                                            <Dropdown optionValue='code' id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={gendersList} optionLabel='name' />
                                         )} />
                                         <label htmlFor="gender" className={classNames({ 'p-error': errors.gender })}>Género</label>
                                     </span>

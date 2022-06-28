@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
+import axios from 'axios';
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -16,6 +18,7 @@ export default function CreateNewVaccine() {
 
     const { emergentNewVaccineState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
+    const { token } = useContext(UserContext);
 
     const toast = useRef(null);
 
@@ -24,19 +27,40 @@ export default function CreateNewVaccine() {
     const [formData, setFormData] = useState({});
 
     const defaultValues = {
-        id_vaccine: '',
         name: '',
         required_doses: null,
-        frequency: null,
     }
 
     const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
 
     const onSubmit = (data) => {
         setFormData(data);
-        setShowMessage(true);
-
-        reset();
+        try {
+            axios.post(process.env.REACT_APP_API_URL + "admin/vaccines/create", data, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    if (res.status === 201) {
+                        setShowMessage(true);
+                        reset();
+                    }
+                })
+                .catch(err => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: err.response.data.message,
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                })
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
     };
 
     const getFormErrorMessage = (name) => {
@@ -118,20 +142,12 @@ export default function CreateNewVaccine() {
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="required_doses" control={control} render={({ field, fieldState }) => (
+                                        <Controller name="required_doses" rules={{ required: 'El número de dosis es requerido' }} control={control} render={({ field, fieldState }) => (
                                             <InputNumber id={field.name} {...field} mode="decimal" onChange={(e) => field.onChange(e.value)} />
                                         )} />
-                                        <label htmlFor="required_doses" >Dosis requeridas</label>
+                                        <label htmlFor="required_doses"  className={classNames({ 'p-error': errors.required_doses })} >Dosis requeridas*</label>
                                     </span>
-                                </div>
-
-                                <div className="field">
-                                    <span className="p-float-label">
-                                        <Controller name="frequency" control={control} render={({ field, fieldState }) => (
-                                            <InputNumber id={field.name} {...field} mode="decimal" onChange={(e) => field.onChange(e.value)} />
-                                        )} />
-                                        <label htmlFor="frequency" >Frecuencia de la vacuna (en dias)</label>
-                                    </span>
+                                    {getFormErrorMessage('required_doses')}
                                 </div>
                             </form>
                         </div>

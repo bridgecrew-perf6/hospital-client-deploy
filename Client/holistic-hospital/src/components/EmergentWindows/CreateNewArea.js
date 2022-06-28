@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import axios from 'axios';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -12,15 +14,16 @@ import { classNames } from 'primereact/utils';
 import { InputNumber } from 'primereact/inputnumber';
 
 import "../cssFiles/FormDemo.css";
-import { Genders } from '../../helpers/Genders';
+import { GendersList } from '../../helpers/GendersList';
 
 
 export default function CreateNewArea() {
 
     const { emergentNewAreaState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
+    const { token } = useContext(UserContext);
 
-    const genders = Genders;
+    const gendersList = GendersList;
     const toast = useRef(null);
 
     const [display, setDisplay] = useState(false);
@@ -39,9 +42,40 @@ export default function CreateNewArea() {
 
     const onSubmit = (data) => {
         setFormData(data);
-        setShowMessage(true);
-
-        reset();
+        try {
+            axios.post(process.env.REACT_APP_API_URL + "admin/areas/create", data, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    if (res.status === 201) {
+                        setShowMessage(true);
+                        reset();
+                    }else{
+                        toast.current.show({
+                            severity: 'error',
+                            summary: 'Error',
+                            detail: res.data.message,
+                            life: 3000,
+                            style: { marginLeft: '20%' }
+                        });
+                    }
+                })
+                .catch(err => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: err.response.data.message,
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                })
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
     };
 
     const getFormErrorMessage = (name) => {
@@ -49,7 +83,7 @@ export default function CreateNewArea() {
     };
 
     const dialogFooter = <div className="flex justify-content-center"><Button label="OK" className="p-button-text"
-    autoFocus onClick={() => setShowMessage(false)} /></div>;
+        autoFocus onClick={() => setShowMessage(false)} /></div>;
 
     useEffect(() => {
         setDisplay(emergentNewAreaState);
@@ -123,19 +157,19 @@ export default function CreateNewArea() {
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="gender" control={control} rules={{ required: 'El género es requerido.' }} render={({ field }) => (
-                                            <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={genders} optionLabel='name' />
+                                        <Controller name="gender" control={control} render={({ field }) => (
+                                            <Dropdown optionValue='code' id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={gendersList} optionLabel='name' />
                                         )} />
                                         <label htmlFor="gender" className={classNames({ 'p-error': errors.gender })}>Género</label>
                                     </span>
                                     {getFormErrorMessage('gender')}
                                 </div>
 
-                                
+
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="start_age" control={control}  render={({ field, fieldState }) => (
-                                            <InputNumber id={field.name} {...field} mode="decimal" onChange={(e) => field.onChange(e.value)}  />
+                                        <Controller name="start_age" control={control} render={({ field, fieldState }) => (
+                                            <InputNumber id={field.name} {...field} mode="decimal" onChange={(e) => field.onChange(e.value)} />
                                         )} />
                                         <label htmlFor="start_age" >Edad inicial</label>
                                     </span>

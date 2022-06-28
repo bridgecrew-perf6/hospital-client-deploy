@@ -34,7 +34,9 @@ export default function ExamExistenceTable() {
             setTestsList(res.data);
             setLoading(false);
           }
-        }).catch(err => console.error(err));
+        }).catch(err => {
+          console.error(err);
+        });
     } catch (error) {
       throw console.error(error);
     }

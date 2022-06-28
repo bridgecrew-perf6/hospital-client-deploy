@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
+import axios from 'axios';
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -15,6 +17,8 @@ import "../cssFiles/FormDemo.css";
 export default function CreateNewDrug() {
     const { emergentNewDrugState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
+    const { token } = useContext(UserContext);
+
     const toast = useRef(null);
     const [display, setDisplay] = useState(false);
     const [showMessage, setShowMessage] = useState(false);
@@ -22,8 +26,8 @@ export default function CreateNewDrug() {
 
 
     const defaultValues = {
-        drug_lab : '',
-        name : '',
+        drug_lab: '',
+        name: '',
         active: '',
         active_percentage: null,
     }
@@ -32,20 +36,43 @@ export default function CreateNewDrug() {
 
     const onSubmit = (data) => {
         setFormData(data);
-        setShowMessage(true);
-
-        reset();
+        try {
+            axios.post(process.env.REACT_APP_API_URL + "admin/drugs/create", data, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    if (res.status === 201) {
+                        setShowMessage(true);
+                        reset();
+                    }
+                })
+                .catch(err => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: err.response.data.message,
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                })
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
     };
 
     const getFormErrorMessage = (name) => {
         return errors[name] && <small className="p-error">{errors[name].message}</small>
     };
 
-    const dialogFooter = <div className="flex justify-content-center"><Button label="OK" 
-    className="p-button-text" autoFocus onClick={() => setShowMessage(false)} /></div>;
+    const dialogFooter = <div className="flex justify-content-center"><Button label="OK"
+        className="p-button-text" autoFocus onClick={() => setShowMessage(false)} /></div>;
 
     useEffect(() => {
-        setDisplay(emergentNewDrugState); 
+        setDisplay(emergentNewDrugState);
     }, [emergentNewDrugState]);
 
     const dialogFuncMap = {
@@ -79,7 +106,7 @@ export default function CreateNewDrug() {
         <div className="flex flex-col">
             <Toast ref={toast} />
             <Dialog
-                breakpoints={{'960px': '75vw', '640px': '100vw'}}
+                breakpoints={{ '960px': '75vw', '640px': '100vw' }}
                 header="Agregar Medicamento"
                 visible={display}
                 style={{ width: '50vw' }}
@@ -88,12 +115,12 @@ export default function CreateNewDrug() {
             >
 
                 <div className="form-demo w-full">
-                    <Dialog visible={showMessage} onHide={() => setShowMessage(false)} position="top"  footer={dialogFooter}  
-                    showHeader={false} breakpoints={{ '960px': '80vw' }} style={{ width: '30vw' }}>
+                    <Dialog visible={showMessage} onHide={() => setShowMessage(false)} position="top" footer={dialogFooter}
+                        showHeader={false} breakpoints={{ '960px': '80vw' }} style={{ width: '30vw' }}>
                         <div className="flex justify-content-center flex-column pt-6 px-3">
                             <i className="pi pi-check-circle" style={{ fontSize: '5rem', color: 'var(--green-500)' }}></i>
                             <p style={{ lineHeight: 1.5, textIndent: '1rem' }}>
-                                <b>{formData.name}</b> registrada con éxito.
+                                <b>{formData.active}</b> registrada con éxito.
                             </p>
                         </div>
                     </Dialog>
@@ -101,13 +128,13 @@ export default function CreateNewDrug() {
                     <div className="m-1 w-full flex justify-content-center">
 
                         <div className="card w-full">
-                            
+
                             <form autoComplete='off' onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-2 p-fluid w-full">
 
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="name" control={control} rules={{ required: 'El nombre es requerido' }} render={({ field, fieldState }) => (
+                                        <Controller name="name" control={control} render={({ field, fieldState }) => (
                                             <InputText id={field.name} {...field} autoFocus className={classNames({ 'p-invalid': fieldState.invalid })} />
                                         )} />
                                         <label htmlFor="name" className={classNames({ 'p-error': errors.name })}>Nombre</label>
@@ -118,7 +145,7 @@ export default function CreateNewDrug() {
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="drug_lab" control={control} rules={{ required: 'El laboratorio es requerido' }} render={({ field, fieldState }) => (
+                                        <Controller name="drug_lab" control={control} render={({ field, fieldState }) => (
                                             <InputText id={field.name} {...field} autoFocus className={classNames({ 'p-invalid': fieldState.invalid })} />
                                         )} />
                                         <label htmlFor="drug_lab" className={classNames({ 'p-error': errors.name })}>Laboratorio</label>
@@ -128,24 +155,24 @@ export default function CreateNewDrug() {
 
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="active" control={control}  render={({ field, fieldState }) => (
-                                            <InputText id={field.name} {...field} autoFocus className={classNames({ 'p-invalid': fieldState.invalid })} />
+                                        <Controller name="active" rules={{ required: 'El activo es requerido' }} control={control} render={({ field, fieldState }) => (
+                                            <InputText id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })} />
                                         )} />
-                                        <label htmlFor="active" >Activo</label>
+                                        <label htmlFor="active" >Activo*</label>
                                     </span>
                                     {getFormErrorMessage('active')}
                                 </div>
 
-
                                 <div className="field">
                                     <span className="p-float-label">
-                                        <Controller name="frequency" control={control}  render={({ field, fieldState }) => (
-                                            <InputNumber  mode="decimal"
-                                            minFractionDigits={2} id={field.name} {...field} 
-                                            min="0" onChange={(e) => field.onChange(e.value)}/>
+                                        <Controller defaultValue={null} name="active_percentage" rules={{ required: 'El porcentaje de activo es requerido' }} control={control} render={({ field, fieldState }) => (
+                                            <InputNumber id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })}
+                                                mode="decimal" minFractionDigits={2} min="0.01" max="100.000" onChange={(e) => field.onChange(e.value)}
+                                            />
                                         )} />
-                                        <label htmlFor="frequency" >Porcentaje de activo</label>
+                                        <label htmlFor="active_percentage" >Porcentaje de activo*</label>
                                     </span>
+                                    {getFormErrorMessage('active_percentage')}
                                 </div>
                             </form>
                         </div>

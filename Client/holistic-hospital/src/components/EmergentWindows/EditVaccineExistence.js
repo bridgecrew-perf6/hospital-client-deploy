@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
+import axios from 'axios';
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -13,34 +15,53 @@ import { InputNumber } from 'primereact/inputnumber';
 import "../cssFiles/FormDemo.css";
 
 
-export default function EditVaccineExistence({code}) {
-    
+export default function EditVaccineExistence({code,name}) {
     const { emergentEditVaccineState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
+    const { token } = useContext(UserContext);
 
     const toast = useRef(null);
 
     const [display, setDisplay] = useState(false);
     const [showMessage, setShowMessage] = useState(false);
-    const [formData, setFormData] = useState({});
 
-    const defaultValues = {
-    name: '',
-    gender: '',
-    start_age: null,
-    frequency: null,
-    }
-
-    const { control, formState: { errors }, handleSubmit, reset } = useForm({ defaultValues });
+    const { control, formState: { errors }, handleSubmit, reset } = useForm();
 
     const onSubmit = (data) => {
-        setFormData(data);
-        setShowMessage(true);
-
-        reset();
+        try {
+            data = {
+                id: code,
+                name: data.name,
+                required_doses: data.required_doses
+            }
+            axios.put(process.env.REACT_APP_API_URL + 'admin/vaccines/update', data, { headers: { Authorization: `Bearer ${token}` } })
+                .then((res) => {
+                    if (res.status === 200) {
+                        reset();
+                        setShowMessage(true);
+                    }
+                })
+                .catch((err) => {
+                    toast.current.show({
+                        severity: 'error',
+                        summary: 'Error',
+                        detail: err.response.data.message,
+                        life: 3000,
+                        style: { marginLeft: '20%' }
+                    });
+                });
+        } catch (error) {
+            toast.current.show({
+                severity: 'error',
+                summary: 'Error',
+                detail: 'Algo salió mal',
+                life: 3000,
+                style: { marginLeft: '20%' }
+            });
+        }
     };
 
-    const dialogFooter = <div className="flex justify-content-center"><Button label="OK" className="p-button-text" autoFocus onClick={() => setShowMessage(false)} /></div>;
+    const dialogFooter = <div className="flex justify-content-center"><Button label="OK" className="p-button-text" autoFocus onClick={() => {setShowMessage(false); onHide('display')}} /></div>;
 
 
     useEffect(() => {
@@ -89,7 +110,7 @@ export default function EditVaccineExistence({code}) {
                         <div className="flex justify-content-center flex-column pt-6 px-3">
                             <i className="pi pi-check-circle" style={{ fontSize: '5rem', color: 'var(--green-500)' }}></i>
                             <p style={{ lineHeight: 1.5, textIndent: '1rem' }}>
-                                <b>{code}</b> modificado con éxito.
+                                <b>{name}</b> modificado con éxito.
                             </p>
                         </div>
                     </Dialog>
@@ -106,7 +127,7 @@ export default function EditVaccineExistence({code}) {
                                         <Controller name="name" control={control}  render={({ field, fieldState }) => (
                                             <InputText id={field.name} {...field} autoFocus className={classNames({ 'p-invalid': fieldState.invalid })} />
                                         )} />
-                                        <label htmlFor="name" className={classNames({ 'p-error': errors.name })}>Nombre*</label>
+                                        <label htmlFor="name" className={classNames({ 'p-error': errors.name })}>Nombre</label>
                                     </span>
                                 </div>
 
@@ -118,15 +139,6 @@ export default function EditVaccineExistence({code}) {
                                             <InputNumber id={field.name} {...field} mode="decimal" onChange={(e) => field.onChange(e.value)} />
                                         )} />
                                         <label htmlFor="required_doses" >Dosis requeridas</label>
-                                    </span>
-                                </div>
-
-                                <div className="field">
-                                    <span className="p-float-label">
-                                        <Controller name="frequency" control={control} render={({ field, fieldState }) => (
-                                            <InputNumber id={field.name} {...field} mode="decimal" onChange={(e) => field.onChange(e.value)} />
-                                        )} />
-                                        <label htmlFor="frequency" >Frecuencia de la vacuna (en dias)</label>
                                     </span>
                                 </div>
                             </form>

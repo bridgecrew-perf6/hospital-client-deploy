@@ -58,7 +58,7 @@ export default function EditUser({ i, u }) {
         return errors[name] && <small className="p-error">{errors[name].message}</small>
     };
 
-    const dialogFooter = <div className="flex justify-content-center"><Button label="OK" className="p-button-text" autoFocus onClick={() => setShowMessage(false)} /></div>;
+    const dialogFooter = <div className="flex justify-content-center"><Button label="OK" className="p-button-text" autoFocus onClick={() => {setShowMessage(false); onHide('display')}} /></div>;
 
     /**
 * Upload New User Emergent logic section code
@@ -123,14 +123,14 @@ export default function EditUser({ i, u }) {
                                             render={({ field, fieldState }) => (
                                                 <InputText id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })} />
                                             )} />
-                                        <label htmlFor="email" className={classNames({ 'p-error': !!errors.email })}>Correo electrónico*</label>
+                                        <label htmlFor="email" className={classNames({ 'p-error': !!errors.email })}>Correo electrónico</label>
                                     </span>
                                     {getFormErrorMessage('email')}
                                 </div>
 
                                 <div className="field">
                                     <span className='p-inline-label'>
-                                        <label htmlFor="status" className={classNames({ 'p-error': !!errors.status })}>Estado*</label>
+                                        <label htmlFor="status" className={classNames({ 'p-error': !!errors.status })}>Estado</label>
                                         <Controller defaultValue={null} name="status" control={control}
                                             render={({ field, fieldState }) => (
                                                 <SelectButton id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })} options={['Activo', 'Inactivo']} />

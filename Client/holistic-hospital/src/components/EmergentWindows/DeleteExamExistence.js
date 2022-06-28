@@ -10,7 +10,7 @@ import { Button } from 'primereact/button';
 
 import "../cssFiles/FormDemo.css";
 
-export default function DeleteExamExistence({id, name}) {
+export default function DeleteExamExistence({ id, name }) {
     const { emergentDeleteOneExamState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
     const { token } = useContext(UserContext);
@@ -37,12 +37,12 @@ export default function DeleteExamExistence({id, name}) {
 
     const deleteExamDialogFooter = (
         <>
-          <Button label="No" icon="pi pi-times" className="p-button-text" onClick={() => onHide("display")} />
-          <Button label="Si" icon="pi pi-check" className="p-button-text" onClick={() => deleteExam()} />
+            <Button label="No" icon="pi pi-times" className="p-button-text" onClick={() => onHide("display")} />
+            <Button label="Si" icon="pi pi-check" className="p-button-text" onClick={() => deleteExam()} />
         </>
-      );
+    );
 
-      const deleteExam = () => {
+    const deleteExam = () => {
         try {
             axios.delete(process.env.REACT_APP_API_URL + `admin/tests/${JSON.stringify(id)}/delete`, { headers: { Authorization: `Bearer ${token}` } })
                 .then(res => {
@@ -75,20 +75,20 @@ export default function DeleteExamExistence({id, name}) {
                 style: { marginLeft: '20%' }
             });
         }
-      }
+    };
     return (
         <div className="flex flex-col">
             <Toast ref={toast} />
-            <Dialog 
-                visible={display} style={{ width: '450px' }} 
-                header="Confirm" 
-                modal 
-                footer={deleteExamDialogFooter} 
+            <Dialog
+                visible={display} style={{ width: '450px' }}
+                header="Confirm"
+                modal
+                footer={deleteExamDialogFooter}
                 onHide={() => onHide('display')}
             >
                 <div className="confirmation-content">
                     <i className="pi pi-exclamation-triangle mr-3" style={{ fontSize: '2rem' }} />
-                    { <span>¿Seguro que desea eliminar el examen <b>{name}</b> ?</span>}
+                    {<span>¿Seguro que desea eliminar el examen <b>{name}</b> ?</span>}
                 </div>
             </Dialog>
         </div>
