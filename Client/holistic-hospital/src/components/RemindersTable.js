@@ -42,7 +42,9 @@ export default function RemindersTable() {
           :
           rowData.id_area !== null ? <h1>Área: <b>{rowData.id_area.name}</b></h1>
           :
-          <h1>Examen: <b>{rowData.id_test.name}</b></h1>
+          rowData.id_test !== null ? <h1>Examen: <b>{rowData.id_test.description}</b></h1>
+          :
+          ""
         }
     </span>
   }
