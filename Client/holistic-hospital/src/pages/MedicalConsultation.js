@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import MenuContext from "../contexts/MenuContext/MenuContext";
+import { UserContext } from "../contexts/UserContext/UserContext";
 //Components imports
 import { InputTextarea } from 'primereact/inputtextarea';
 import { Button } from 'primereact/button';
@@ -13,6 +14,8 @@ import CreatePrescription from "../components/EmergentWindows/CreatePrescription
 
 
 export default function MedicalConsultation() {
+  const { fullname, age, gender, idAppointment, userCode } = useContext(UserContext);
+  
   const navigate = useNavigate();
   const menuContext = useContext(MenuContext);
   const patient = PatientInConsult;
@@ -33,9 +36,9 @@ export default function MedicalConsultation() {
       <UserRecordTable />
       <CreatePrescription />
       <h1 className="text-3xl">Consulta</h1>
-      <h2 className='lg:text-xl'><b>Nombre: </b>{patient.at(0).name + ' ' + patient.at(0).last_name}</h2>
-      <h2 className='lg:text-xl'><b>Edad: </b>{patient.at(0).age}</h2>
-      <h2 className='lg:text-xl'><b>Género: </b>{patient.at(0).gender}</h2>
+      <h2 className='lg:text-xl'><b>Nombre: </b>{fullname}</h2>
+      <h2 className='lg:text-xl'><b>Edad: </b>{age}</h2>
+      <h2 className='lg:text-xl'><b>Género: </b>{gender === "F" ? 'Femenino' : 'Masculino'}</h2>
       <h2 className='lg:text-xl'><b>Discutido en cita:</b></h2>
       <InputTextarea onChange={(e) => setValue(e.target.value)} rows={5} cols={50} />
       <br />

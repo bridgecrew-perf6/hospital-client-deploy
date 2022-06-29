@@ -1,40 +1,62 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect, useContext, useRef } from "react";
+import axios from "axios";
+import { UserContext } from '../contexts/UserContext/UserContext';
 
 //Components imports
 import { DataTable } from "primereact/datatable";
 import { Column } from 'primereact/column';
-import { InputText } from "primereact/inputtext"
 import './cssFiles/DataTable.css';
 
-//Helpers imports
-import { RemindersList } from "../helpers/RemindersList";
-
 export default function RemindersTable() {
-  const reminders = RemindersList;
-  const [globalFilter, setGlobalFilter] = useState(null);
+  const { token } = useContext(UserContext);
+  
+  const [loading, setLoading] = useState(true);
+  const [remindersList, setRemindersList] = useState([]);
   const dt = useRef(null);
 
+  useEffect(() => {
+    try {
+      axios.get(process.env.REACT_APP_API_URL + "patient/recordatorios", { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          if (res.status === 200) {
+            setRemindersList(res.data);
+            setLoading(false);
+          }
+        }).catch(err => console.error(err));
+    } catch (error) {
+      throw console.error(error);
+    }
+  })
+  
   const header = (
     <div className="table-header">
-      <h5 className="mx-0 my-1">Vacunas aplicados</h5>
-      <span className="p-input-icon-left">
-        <i className="pi pi-search" />
-        <InputText type="search" onInput={(e) => setGlobalFilter(e.target.value)} placeholder="Buscar..." />
-      </span>
+      <h5 className="mx-0 my-1">Recordatorios</h5>
     </div>
   );
-  
+
+  const detailBodyTemplate = (rowData) => {
+    return <span>
+        <h1>Tipo: <b>{rowData.id_appointment_type.type_name}</b></h1>
+        {
+          rowData.id_inmunization !== null ? <b>{rowData.id_inmunization.name}</b>
+          :
+          rowData.id_area !== null ? <h1>Área: <b>{rowData.id_area.name}</b></h1>
+          :
+          <h1>Examen: <b>{rowData.id_test.name}</b></h1>
+        }
+    </span>
+  }
 
   return (
     <div className="w-full overflow-hidden">
       <div className="card">
-        <DataTable showGridlines lazy={true} ref={dt} value={reminders}
-          dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]}
+        <DataTable showGridlines lazy={true} ref={dt} value={remindersList}
+          dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]} totalRecords={remindersList}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
           currentPageReportTemplate="Showing {first} to {last} of {totalRecords} reminders"
-          globalFilter={globalFilter} header={header} responsiveLayout="scroll">
-          <Column field="appointment_time" header="Fecha del recordatorio"  sortable style={{ minWidth: '12rem' }}></Column>
-          <Column field="appointment_details" header="Detalles del recordatorio" sortable style={{ minWidth: '12rem' }}></Column>
+          loading={loading} header={header} responsiveLayout="scroll">
+          <Column field="timestamp" header="Fecha del recordatorio" style={{ minWidth: '12rem' }}></Column>
+          <Column field="id_appointment_type" header="Detalles del recordatorio" body={detailBodyTemplate} style={{ minWidth: '12rem' }}></Column>
         </DataTable>
       </div>
     </div>

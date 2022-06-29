@@ -18,6 +18,10 @@ const UserState = (props) => {
 
     const [userState, setUserState] = useState(initialState);
     const [userCode, setUserCode] = useState("");
+    const [fullname, setFullname] = useState("");
+    const [age, setAge] = useState(null);
+    const [gender, setGender] = useState();
+    const [idAppointment, setIdAppointment] = useState(null);
 
     useEffect(() => {
         setUserStorage(userState);
@@ -43,6 +47,23 @@ const UserState = (props) => {
         setUserCode(code);
     };
 
+    function settingFullname(name, lastname){
+        const n = name + ' ' + lastname;
+        setFullname(n);
+    };
+
+    function settingAge(age){
+        setAge(age);
+    };
+
+    function settingGender(gender){
+        setGender(gender);
+    };
+
+    function settingIdAppointment(id){
+        setIdAppointment(id);
+    };
+
     return (
         <UserContext.Provider
             value={{
@@ -57,9 +78,17 @@ const UserState = (props) => {
                 status: userState.status,
                 isLogged: userState.isLogged,
                 userCode,
+                fullname,
+                age,
+                gender,
+                idAppointment,
                 
                 getUserStorage,
                 settingUserCode,
+                settingFullname,
+                settingAge,
+                settingGender,
+                settingIdAppointment,
             }}
         >
             <SetUserContext.Provider 

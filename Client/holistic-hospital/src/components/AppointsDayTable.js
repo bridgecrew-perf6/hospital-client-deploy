@@ -17,7 +17,7 @@ import UserRecordTable from "./EmergentWindows/UserRecordTable";
 
 export default function AppointsDayTable() {
   const menuContext = useContext(MenuContext);
-  const { role, token } = useContext(UserContext);
+  const { role, token, settingFullname, settingAge, settingGender, settingIdAppointment, settingUserCode } = useContext(UserContext);
   const navigate = useNavigate();
 
   const dt = useRef(null);
@@ -61,6 +61,11 @@ export default function AppointsDayTable() {
             tooltipOptions={{ position: 'bottom' }}
             className="p-button-rounded p-button-success mr-2"
             onClick={() => {
+              settingUserCode(rowData.id_patient.id_person);
+              settingIdAppointment(rowData.id_appointment);
+              settingFullname(rowData.id_patient.name, rowData.id_patient.last_name);
+              settingAge(getAge(rowData.id_patient.birthDate));
+              settingGender(rowData.id_patient.gender);
               navigate("/landing/citas-dia/consulta")
             }}
           />
