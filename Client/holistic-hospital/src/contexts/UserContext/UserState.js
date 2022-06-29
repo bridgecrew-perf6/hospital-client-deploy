@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { UserContext, SetUserContext } from "./UserContext";
 
 const UserState = (props) => {
-    const initialState = {
+    const initialState = getUserStorage ?? {
         token: '',
         id_person: null,
         name: '',
@@ -14,7 +14,7 @@ const UserState = (props) => {
         area: null,
         status: null,
         isLogged: false,
-    } ?? getUserStorage;
+    };
 
     const [userState, setUserState] = useState(initialState);
     const [userCode, setUserCode] = useState("");
