@@ -1,5 +1,7 @@
 import React, { useState, useEffect, useContext, useRef } from 'react'
+import axios from 'axios';
 import MenuContext from '../../contexts/MenuContext/MenuContext';
+import { UserContext } from '../../contexts/UserContext/UserContext';
 import { useForm, Controller } from 'react-hook-form';
 
 //Components imports
@@ -14,7 +16,8 @@ import { InputNumber } from 'primereact/inputnumber';
 import "../cssFiles/FormDemo.css";
 
 export default function CreatePrescription() {
-
+    const { token } = useContext(UserContext);
+    
     const { emergentPrescriptionState } = useContext(MenuContext);
     const menuContext = useContext(MenuContext);
 

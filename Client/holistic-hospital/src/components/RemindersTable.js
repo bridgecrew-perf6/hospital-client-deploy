@@ -38,11 +38,11 @@ export default function RemindersTable() {
     return <span>
         <h1>Tipo: <b>{rowData.id_appointment_type.type_name}</b></h1>
         {
-          rowData.id_inmunization !== null ? <b>{rowData.id_inmunization.name}</b>
+          rowData.id_vaccine !== null ? <h1>Vacuna: <b>{rowData.id_vaccine.name}</b></h1>
           :
           rowData.id_area !== null ? <h1>Área: <b>{rowData.id_area.name}</b></h1>
           :
-          rowData.id_test !== null ? <h1>Examen: <b>{rowData.id_test.description}</b></h1>
+          rowData.id_test !== null ? <h1>Examen: <b>{rowData.id_test.name}</b></h1>
           :
           ""
         }

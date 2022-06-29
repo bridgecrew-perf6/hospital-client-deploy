@@ -22,7 +22,9 @@ export default function AppointsDayTable() {
 
   const dt = useRef(null);
   const [loading, setLoading] = useState(false);
+  const [loading2, setLoading2] = useState(false);
   const [dayAppointments, setDayAppointments] = useState([]);
+  const [userRecordsList, setUserRecordsList] = useState([]);
   var url = "";
 
   const getUrl = (role) => {
@@ -64,8 +66,9 @@ export default function AppointsDayTable() {
               settingUserCode(rowData.id_patient.id_person);
               settingIdAppointment(rowData.id_appointment);
               settingFullname(rowData.id_patient.name, rowData.id_patient.last_name);
-              settingAge(getAge(rowData.id_patient.birthDate));
+              settingAge(getAge(rowData.id_patient.birthdate));
               settingGender(rowData.id_patient.gender);
+              getUserRecords(rowData.id_patient.id_person);
               navigate("/landing/citas-dia/consulta")
             }}
           />
@@ -80,11 +83,27 @@ export default function AppointsDayTable() {
             tooltipOptions={{ position: 'bottom' }}
             className="p-button-rounded p-button-success mr-2"
             onClick={() => {
+              getUserRecords(rowData.id_patient.id_person);
               menuContext.settingEmergentShowRecordState();
             }}
           />
         </>
       );
+    }
+  }
+
+  const getUserRecords = (id) => {
+    try {
+      getUrl(role);
+      axios.get(process.env.REACT_APP_API_URL + url + `citas-dia/consulta/expediente/${id}`, { headers: { Authorization: `Bearer ${token}` } })
+        .then(res => {
+          if (res.status === 200) {
+            setUserRecordsList(res.data);
+            setLoading2(false);
+          }
+        }).catch(err => console.error(err));
+    } catch (error) {
+      throw console.error(error);
     }
   }
 
@@ -119,10 +138,16 @@ export default function AppointsDayTable() {
     if (rowData.id_patient.gender === "F") return 'Femenino';
     else if (rowData.id_patient.gender === "M") return 'Masculino';
   }
+
+  const statusBodyTemplate = (rowData) => {
+    if (rowData.status === false) return <span className="text-red-800">Pendiente</span>;
+    else return <span className="text-green-800">Atendido</span>
+  };
+
   return (
     <div className="w-full overflow-hidden">
 
-      <UserRecordTable />
+      <UserRecordTable loading={loading2}  userRecordsList={userRecordsList}/>
       <div className="card">
 
 
@@ -134,6 +159,7 @@ export default function AppointsDayTable() {
           <Column field="id_patient.name" header="Nombre" body={nameBodyTemplate} style={{ minWidth: '12rem' }}></Column>
           <Column field="id_patient.birthdate" header="Edad" body={ageBodyTemplate} style={{ minWidth: '12rem' }}></Column>
           <Column field="id_patient.gender" header="Género" body={genderBodyTemplate} style={{ minWidth: '8rem' }}></Column>
+          <Column field="status" header="Estado" body={statusBodyTemplate} style={{ minWidth: '8rem' }}></Column>
           <Column header="Atender/Expediente" body={actionBodyTemplate} exportable={false} style={{ minWidth: '8rem' }}></Column>
         </DataTable>
       </div>
