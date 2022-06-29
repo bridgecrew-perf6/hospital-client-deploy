@@ -51,9 +51,9 @@ export default function RemindersTable() {
     <div className="w-full overflow-hidden">
       <div className="card">
         <DataTable showGridlines lazy={true} ref={dt} value={remindersList}
-          dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]} totalRecords={remindersList}
+          dataKey="id" paginator rows={10} rowsPerPageOptions={[5, 10, 25]} totalRecords={remindersList.length}
           paginatorTemplate="FirstPageLink PrevPageLink PageLinks NextPageLink LastPageLink CurrentPageReport RowsPerPageDropdown"
-          currentPageReportTemplate="Showing {first} to {last} of {totalRecords} reminders"
+          currentPageReportTemplate="Mostrando {first} - {last} de {totalRecords} reminders"
           loading={loading} header={header} responsiveLayout="scroll">
           <Column field="timestamp" header="Fecha del recordatorio" style={{ minWidth: '12rem' }}></Column>
           <Column field="id_appointment_type" header="Detalles del recordatorio" body={detailBodyTemplate} style={{ minWidth: '12rem' }}></Column>

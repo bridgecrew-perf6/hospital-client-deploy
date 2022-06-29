@@ -60,7 +60,7 @@ export default function AreaExistenceTable() {
           className="p-button-rounded p-button-success mr-2"
           onClick={() => {
             setcodevar(rowData.id_area);
-            namevar(rowData.name);
+            setnamevar(rowData.name);
             menuContext.settingEmergentEditAreaState();
           }}
         />
