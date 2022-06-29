@@ -1,4 +1,5 @@
-import React, { useContext, useState } from 'react'
+import React, { useEffect, useContext, useState } from 'react'
+import axios from 'axios';
 import { UserContext } from '../contexts/UserContext/UserContext';
 import { useForm } from 'react-hook-form';
 
@@ -16,71 +17,142 @@ import { Controller } from 'react-hook-form';
 import { classNames } from 'primereact/utils';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarPlus } from '@fortawesome/free-solid-svg-icons';
-import { InputNumber } from 'primereact/inputnumber';
+import { InputText } from 'primereact/inputtext';
 
-//Helpers imports
-import { AreasList } from '../helpers/AreasList';
-import { Inmunizations } from '../helpers/InmunizationsList';
-import { Tests } from '../helpers/TestList';
-import { AreaShifts } from '../helpers/AreaShifts';
-import { People } from '../helpers/UsersList';
 
 export default function ScheduleAppointment() {
-    const { rol, name, last_name } = useContext(UserContext);
-    const users = People;
+    const { token, role, name, last_name } = useContext(UserContext);
     const appointmentsTypes = [{ name: 'Inmunización', code: 1 }, { name: 'Consulta médica', code: 2 }, { name: 'Examen', code: 3 }];
-    const areasList = AreasList;
-    const tests = Tests;
-    const areaShifts = AreaShifts;
-    const inmunizations = Inmunizations;
     const [selectedAppointmentType, setSelectedAppointmentType] = useState(appointmentsTypes[1]);
+    const [error, setError] = useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
 
     const today = new Date();
+    var dateAppointment = new Date();
     const tomorrow = new Date();
     tomorrow.setDate(today.getDate() + 1);
     const [showMessage, setShowMessage] = useState(false);
     const [formData, setFormData] = useState({});
+    const [vaccinesList, setVaccinesList] = useState([]);
+    const [shiftsList, setShiftsList] = useState([]);
+    const [areasList, setAreasList] = useState([]);
+    const [testsList, setTestsList] = useState([]);
+    let url = "";
+    let idVATAppointment = null;
 
-    const defaultValues = {
-        patient: null,
-        inmunization: null,
-        test: null,
-        area: null,
-        appointdate: null,
-        appointime: null,
+    useEffect(() => {
+        try {
+            getUrl(role);
+            axios.get(process.env.REACT_APP_API_URL + url + "vaccines", { headers: { Authorization: `Bearer ${token}` } })
+                .then((res) => {
+                    if (res.status === 200) {
+                        return setVaccinesList(res.data);
+                    }
+                })
+                .catch(err => console.error(err));
+
+            axios.get(process.env.REACT_APP_API_URL + url + "areas", { headers: { Authorization: `Bearer ${token}` } })
+                .then((res) => {
+                    if (res.status === 200) {
+                        return setAreasList(res.data);
+                    }
+                })
+                .catch(err => console.error(err));
+
+            axios.get(process.env.REACT_APP_API_URL + url + "tests", { headers: { Authorization: `Bearer ${token}` } })
+                .then((res) => {
+                    if (res.status === 200) {
+                        return setTestsList(res.data);
+                    }
+                })
+                .catch(err => console.error(err));
+
+            axios.get(process.env.REACT_APP_API_URL + url + "shifts", { headers: { Authorization: `Bearer ${token}` } })
+                .then((res) => {
+                    if (res.status === 200) {
+                        return setShiftsList(res.data);
+                    }
+                })
+                .catch(err => console.error(err));
+        } catch (error) {
+            throw console.error(error);
+        }
+    }, [url, role, token]);
+
+    const getUrl = (role) => {
+        switch (role) {
+            case 2:
+                return url = "patient/";
+            case 3:
+                return url = "secretary/";
+            default:
+                return url = "";
+        }
     }
 
-    const { control, formState: { errors }, handleSubmit, reset, watch } = useForm({ defaultValues });
+    const { control, formState: { errors }, handleSubmit, reset, watch } = useForm();
     const inmunization = watch('inmunization', false);
     const test = watch('test', false);
     const area = watch('area', false);
     const appointdate = watch('appointdate', false);
-    let filteredShifts = null;
+    const shft = watch('shift', false);
 
-    var foundPatient = users.filter(({ code, rol }) => {
-        return formData.patient === code && rol === 2;
-    });
-
-    if (selectedAppointmentType.code === 1) {
-        filteredShifts = inmunization && areaShifts.filter(({ vaccine }) => {
-            return (inmunization.id_inmunization === vaccine);
-        });
-    } else if (selectedAppointmentType.code === 2) {
-        filteredShifts = area && areaShifts.filter(({ hosparea }) => {
-            return (area.code === hosparea);
-        });
-    } else {
-        filteredShifts = test && areaShifts.filter(({ id_test }) => {
-            return (test.code === id_test);
-        });
+    const getIdVAT = () => {
+        if (selectedAppointmentType.code === 1 && inmunization !== null) return idVATAppointment = inmunization.id_vaccine;
+        else if (selectedAppointmentType.code === 3 && test !== null) return idVATAppointment = test.id_test;
+        else if (selectedAppointmentType.code === 2 && area !== null) return idVATAppointment = area.id_area;
     }
 
 
     const onSubmit = (data) => {
-        setFormData(data);
-        setShowMessage(true);
+        try {
+            getUrl(role);
+            getIdVAT();
+            setFormData(data);
+            var dd = appointdate.getDate();
+            var mm = appointdate.getMonth() + 1;
+            var yyyy = appointdate.getFullYear();
 
-        reset();
+            if (dd < 10) {
+                dd = "0" + dd;
+            }
+
+            if (mm < 10) {
+                mm = "0" + mm;
+            }
+
+            dateAppointment = yyyy + "-" + mm + "-" + dd + " " + shft;
+
+            if (role === 3) {
+                data = {
+                    username: data.username,
+                    type: selectedAppointmentType.code,
+                    idVAT: idVATAppointment,
+                    date: dateAppointment.toString(),
+                };
+            }else{
+                data = {
+                    type: selectedAppointmentType.code,
+                    idVAT: idVATAppointment,
+                    date: dateAppointment.toString(),
+                };
+            }
+            axios.post(process.env.REACT_APP_API_URL + url + "schedule-appointment", data, { headers: { Authorization: `Bearer ${token}` } })
+                .then(res => {
+                    console.log("RES ",res);
+                    if (res.status === 201) {
+                        setShowMessage(true);
+                        reset();
+                    }
+                })
+                .catch(err => {
+                    setError(true);
+                    setErrorMessage(err.response.data.message);
+                    setShowMessage(true);
+                });
+        } catch (error) {
+            throw console.error(error);
+        }
     };
 
     const getFormErrorMessage = (name) => {
@@ -92,7 +164,7 @@ export default function ScheduleAppointment() {
     return (
         <div className='card flex h-full bg-gray-100'>
             {
-                (rol === 2 || foundPatient.length > 0) ?
+                (role === 2 || role === 3 && (error === false)) ?
                     <Dialog visible={showMessage} onHide={() => setShowMessage(false)} position="top" footer={dialogFooter} showHeader={false} breakpoints={{ '960px': '80vw' }} style={{ width: '50vw' }}>
                         <div className="flex justify-content-center flex-column pt-6 px-3">
                             <i className="pi pi-check-circle" style={{ fontSize: '5rem', color: 'var(--green-500)' }}></i>
@@ -103,18 +175,16 @@ export default function ScheduleAppointment() {
                                 </p>
                                 <p>
                                     <b>Paciente: </b>{
-                                        rol === 2 ? name + ' ' + last_name
-                                            : rol === 3 ?
-                                                foundPatient && formData.patient ? foundPatient.at(0).name + ' ' + foundPatient.at(0).last_name
-                                                    :
-                                                    'Usuario no encontrado'
+                                        role === 2 ? name + ' ' + last_name
+                                            : role === 3 ?
+                                                formData.username
                                                 : ''
                                     }
                                 </p>
                                 {
                                     selectedAppointmentType && selectedAppointmentType.code === 1 ?
                                         <p>
-                                            <b>Vacuna: </b>{formData.inmunization && formData.inmunization.vaccine_name}
+                                            <b>Vacuna: </b>{formData.inmunization && formData.inmunization.name}
                                         </p>
                                         :
                                         selectedAppointmentType.code === 2 ?
@@ -132,7 +202,7 @@ export default function ScheduleAppointment() {
                                     <b>Dia: </b>{formData.appointdate && formData.appointdate.toLocaleDateString()}
                                 </p>
                                 <p>
-                                    <b>Turno: </b>{formData.appointime}
+                                    <b>Turno: </b>{formData.shift}
                                 </p>
                             </h1>
                         </div>
@@ -142,7 +212,7 @@ export default function ScheduleAppointment() {
                         <div className="flex justify-content-center flex-column pt-6 px-3">
                             <i className="pi pi-exclamation-circle" style={{ fontSize: '5rem', color: 'red' }}></i>
                             <h1 style={{ lineHeight: 1.5, textIndent: '1rem' }}>
-                                El usuario no fue encontrado o no es un paciente.
+                                {  errorMessage}
                             </h1>
                         </div>
                     </Dialog>
@@ -176,15 +246,15 @@ export default function ScheduleAppointment() {
                     <div className='flex justify-center items-center'>
                         <form onSubmit={handleSubmit(onSubmit)} className="w-1/2 pt-10 grid grid-cols-2 flex flex-col block justify-center items-center rounded-md shadow-md">
                             {
-                                rol === 3 ?
+                                role === 3 ?
                                     <div className="field mt-6">
                                         <span className="p-float-label">
-                                            <Controller name="patient" control={control} rules={{ required: 'El código de paciente es requerida.' }} render={({ field }) => (
-                                                <InputNumber autoFocus id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} />
+                                            <Controller defaultValue={""} name="username" control={control} rules={{ required: 'El nombre de usuario es requerido' }} render={({ field, fieldState }) => (
+                                                <InputText id={field.name} {...field} className={classNames({ 'p-invalid': fieldState.invalid })} />
                                             )} />
-                                            <label htmlFor="patient" className={classNames({ 'p-error': errors.patientcode })}>Código de paciente*</label>
+                                            <label htmlFor="name" className={classNames({ 'p-error': errors.username })}>Nombre de usuario*</label>
                                         </span>
-                                        {getFormErrorMessage('patient')}
+                                        {getFormErrorMessage('username')}
                                     </div>
                                     :
                                     ""
@@ -193,8 +263,8 @@ export default function ScheduleAppointment() {
                                 selectedAppointmentType && selectedAppointmentType.code === 1 ?
                                     <div className="field mt-6">
                                         <span className="p-float-label">
-                                            <Controller name="inmunization" control={control} rules={{ required: 'La vacuna es requerida.' }} render={({ field }) => (
-                                                <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={inmunizations} optionLabel='vaccine_name' />
+                                            <Controller defaultValue={null} name="inmunization" control={control} rules={{ required: 'La vacuna es requerida.' }} render={({ field }) => (
+                                                <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={vaccinesList} optionLabel='name' />
                                             )} />
                                             <label htmlFor="inmunization" className={classNames({ 'p-error': errors.inmunization })}>Vacuna*</label>
                                         </span>
@@ -208,8 +278,8 @@ export default function ScheduleAppointment() {
                                 selectedAppointmentType && selectedAppointmentType.code === 3 ?
                                     <div className="field mt-6">
                                         <span className="p-float-label">
-                                            <Controller name="test" control={control} rules={{ required: 'El examen es requerido.' }} render={({ field }) => (
-                                                <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={tests} optionLabel='name' />
+                                            <Controller defaultValue={null} name="test" control={control} rules={{ required: 'El examen es requerido.' }} render={({ field }) => (
+                                                <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={testsList} optionLabel='name' />
                                             )} />
                                             <label htmlFor="test" className={classNames({ 'p-error': errors.test })}>Examen*</label>
                                         </span>
@@ -223,7 +293,7 @@ export default function ScheduleAppointment() {
                                 selectedAppointmentType && selectedAppointmentType.code === 2 ?
                                     <div className="field mt-8">
                                         <span className="p-float-label">
-                                            <Controller name="area" control={control} rules={{ required: 'El área es requerido.' }} render={({ field }) => (
+                                            <Controller defaultValue={null} name="area" control={control} rules={{ required: 'El área es requerido.' }} render={({ field }) => (
                                                 <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={areasList} optionLabel='name' />
                                             )} />
                                             <label htmlFor="area" className={classNames({ 'p-error': errors.area })}>Área*</label>
@@ -277,12 +347,12 @@ export default function ScheduleAppointment() {
                                 appointdate &&
                                 <div className="field mt-8">
                                     <span className="p-float-label">
-                                        <Controller name="appointime" control={control} rules={{ required: 'El turno de cita es requerido.' }} render={({ field }) => (
-                                            <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={filteredShifts.at(0).shifts} />
+                                        <Controller name="shift" control={control} rules={{ required: 'El turno de cita es requerido.' }} render={({ field }) => (
+                                            <Dropdown id={field.name} value={field.value} onChange={(e) => field.onChange(e.value)} options={shiftsList} optionLabel={'start_hour'} optionValue='start_hour' />
                                         )} />
-                                        <label htmlFor="appointime" className={classNames({ 'p-error': errors.appointime })}>Turno*</label>
+                                        <label htmlFor="shift" className={classNames({ 'p-error': errors.shift })}>Turno*</label>
                                     </span>
-                                    {getFormErrorMessage('appointime')}
+                                    {getFormErrorMessage('shift')}
                                 </div>
                             }
 
